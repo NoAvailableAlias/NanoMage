@@ -1,0 +1,49 @@
+﻿<Window x:Class="NanoMage.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:controls="clr-namespace:NanoMage.Controls"
+        xmlns:local="clr-namespace:NanoMage"
+        mc:Ignorable="d"
+        Title="NanoMage" Height="480" Width="720" WindowStyle="None" AllowsTransparency="True"
+        KeyDown="Window_KeyDown" MouseDown="Window_MouseDown" PreviewMouseDown="Window_PreviewMouseDown"
+        ResizeMode="CanResizeWithGrip" StateChanged="Window_StateChanged">
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="35"></WindowChrome>
+    </WindowChrome.WindowChrome>
+    <Grid>
+        <Grid Background="Black" AllowDrop="True" Name="ImageGrid" Drop="ImageGrid_Drop">
+            <controls:ZoomBorder x:Name="ImageBorder" ClipToBounds="True">
+                <Image Name="ImageControl" UseLayoutRounding="true" SnapsToDevicePixels="true">
+                    <Image.RenderTransform>
+                        <TransformGroup>
+                            <ScaleTransform />
+                            <TranslateTransform />
+                        </TransformGroup>
+                    </Image.RenderTransform>
+                </Image>
+            </controls:ZoomBorder>
+        </Grid>
+        <Grid VerticalAlignment="Top" Height="10" Background="DarkGray" Name="TitleBar"
+            MouseEnter="TitleBar_MouseEnter" MouseLeave="TitleBar_MouseLeave"
+            WindowChrome.IsHitTestVisibleInChrome="True">
+            <DockPanel VerticalAlignment="Stretch" HorizontalAlignment="Left">
+                <Label Margin="10,0" VerticalAlignment="Stretch" FontSize="16" Cursor="Hand" Name="TitleBarCopy" MouseDown="TitleBarCopy_MouseDown">🔗</Label>
+                <TextBox Name="TitleBarLabel"
+                    BorderThickness="0"
+                    Opacity="0.0"
+                    Text="{Binding Text, Mode=OneWay}"
+                    IsReadOnly="True"
+                    TextWrapping="Wrap"
+                    VerticalAlignment="Center"
+                    Background="Transparent" />
+            </DockPanel>
+            <DockPanel VerticalAlignment="Stretch" HorizontalAlignment="Right">
+                <Button Width="30" VerticalAlignment="Stretch" Name="TitleBtnMinimize" FontSize="16" Click="TitleBtnMinimize_Click" Padding="1,1,1,5">‒</Button>
+                <Button Width="30" VerticalAlignment="Stretch" Name="TitleBtnMaximize" FontSize="16" Click="TitleBtnMaximize_Click" Padding="1,1,1,6">□</Button>
+                <Button Width="30" VerticalAlignment="Stretch" Name="TitleBtnDestruct" FontSize="16" Click="TitleBtnDestruct_Click" Padding="1,1,1,5">x</Button>
+            </DockPanel>
+        </Grid>
+    </Grid>
+</Window>
