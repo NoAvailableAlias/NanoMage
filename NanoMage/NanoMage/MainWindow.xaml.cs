@@ -21,6 +21,9 @@ namespace NanoMage
 
             moImageController = new ImageController(this);
 
+            MaxWidth = SystemParameters.PrimaryScreenWidth;
+            MaxHeight = SystemParameters.PrimaryScreenHeight;
+
             RenderOptions.SetBitmapScalingMode(ImageControl, BitmapScalingMode.Fant);
         }
 
