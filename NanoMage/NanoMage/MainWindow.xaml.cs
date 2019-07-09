@@ -21,8 +21,10 @@ namespace NanoMage
 
             moImageController = new ImageController(this);
 
-            MaxWidth = SystemParameters.PrimaryScreenWidth;
-            MaxHeight = SystemParameters.PrimaryScreenHeight;
+            // "Fix" the windowchrome border gap issue... for now...
+            var toBorderThickness = SystemParameters.WindowResizeBorderThickness;
+            MaxWidth = SystemParameters.PrimaryScreenWidth + toBorderThickness.Right + 3;
+            MaxHeight = SystemParameters.PrimaryScreenHeight + toBorderThickness.Bottom + 3;
 
             RenderOptions.SetBitmapScalingMode(ImageControl, BitmapScalingMode.Fant);
         }
@@ -64,34 +66,17 @@ namespace NanoMage
             }
         }
 
-        private void Window_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+        private void Window_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            switch (e.ChangedButton)
+            if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control &&
+                // This is required to play nice with TitleBar_MouseLeftButtonDown
+                (Mouse.LeftButton == MouseButtonState.Pressed))
             {
-                case MouseButton.Left:
-                    if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
-                    {
-                        // Instead of moving the ZoomBorder on left click drag,
-                        // Now when ctrl is held, left click moves the window
-                        DragMove();
-                    }
-                    break;
-            }
-        }
-
-        private void Window_StateChanged(object sender, System.EventArgs e)
-        {
-            if (WindowState == WindowState.Maximized)
-            {
-                // Fix the windowchrome border gap issue
-                var toBorderThickness = SystemParameters.WindowResizeBorderThickness;
-                MaxWidth = SystemParameters.PrimaryScreenWidth + toBorderThickness.Right + 3;
-                MaxHeight = SystemParameters.PrimaryScreenHeight + toBorderThickness.Bottom + 3;
-            }
-            else
-            {
-                MaxWidth = SystemParameters.PrimaryScreenWidth;
-                MaxHeight = SystemParameters.PrimaryScreenHeight;
+                if (WindowState == WindowState.Maximized)
+                {
+                    WindowState = WindowState.Normal;
+                }
+                DragMove();
             }
         }
 
@@ -130,6 +115,16 @@ namespace NanoMage
         {
             TitleBar.Height = TitleBtnMinimize.Width / 3;
             TitleBarLabel.Opacity = 0.0;
+        }
+
+        private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if ((Keyboard.Modifiers & ModifierKeys.Control) != ModifierKeys.Control &&
+                // This is required to play nice with Window_PreviewMouseLeftButtonDown
+                (Mouse.LeftButton == MouseButtonState.Pressed))
+            {
+                DragMove();
+            }
         }
 
         //----------------------------------------------------------------------

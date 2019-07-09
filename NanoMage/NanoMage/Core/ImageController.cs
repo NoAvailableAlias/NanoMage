@@ -157,12 +157,14 @@ namespace NanoMage.Core
 
         private void _renderCurrentSeek(int piCurrentSeek, int piCurrentIndex)
         {
+            // If this render call is still for the current seek
             if (miCurrentSeek == piCurrentSeek)
             {
                 var toBitmapImage = moImageBytes[piCurrentIndex] as BitmapImage;
 
                 if (toBitmapImage == null)
                 {
+                    // Something went wrong or the current seek is still loading
                     moMainWindow.ImageControl.ClearValue(Image.SourceProperty);
                 }
                 else
