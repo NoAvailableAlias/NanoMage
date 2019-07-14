@@ -196,7 +196,6 @@ namespace NanoMage.Core
                     moMainWindow.ImageControl.SetCurrentValue(Image.SourceProperty, toBitmapImage);
                 }
                 moMainWindow.Title = Path.GetFileName(moImagePaths[piCurrentIndex]);
-                moMainWindow.TitleBarLabel.Text = moMainWindow.Title;
             }
         }
     }

@@ -72,11 +72,7 @@ namespace NanoMage
                 // This is required to play nice with TitleBar_MouseLeftButtonDown
                 (Mouse.LeftButton == MouseButtonState.Pressed))
             {
-                if (WindowState == WindowState.Maximized)
-                {
-                    WindowState = WindowState.Normal;
-                }
-                DragMove();
+                _mouseLeftButtonDown(e);
             }
         }
 
@@ -108,13 +104,13 @@ namespace NanoMage
         private void TitleBar_MouseEnter(object sender, MouseEventArgs e)
         {
             TitleBar.Height = TitleBtnMinimize.Width;
-            TitleBarLabel.Opacity = 1.0;
+            TitleBarCopy.Visibility = Visibility.Visible;
         }
 
         private void TitleBar_MouseLeave(object sender, MouseEventArgs e)
         {
             TitleBar.Height = TitleBtnMinimize.Width / 3;
-            TitleBarLabel.Opacity = 0.0;
+            TitleBarCopy.Visibility = Visibility.Collapsed;
         }
 
         private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -123,8 +119,18 @@ namespace NanoMage
                 // This is required to play nice with Window_PreviewMouseLeftButtonDown
                 (Mouse.LeftButton == MouseButtonState.Pressed))
             {
-                DragMove();
+                _mouseLeftButtonDown(e);
             }
+        }
+
+        private void _mouseLeftButtonDown(MouseButtonEventArgs e)
+        {
+            if (e.ClickCount == 2)
+            {
+                WindowState = (WindowState == WindowState.Maximized)
+                    ? WindowState.Normal : WindowState.Maximized;
+            }
+            DragMove();
         }
 
         //----------------------------------------------------------------------

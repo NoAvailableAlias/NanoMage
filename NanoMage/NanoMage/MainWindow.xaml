@@ -31,17 +31,14 @@
             MouseLeftButtonDown="TitleBar_MouseLeftButtonDown"
             WindowChrome.IsHitTestVisibleInChrome="True">
             <DockPanel VerticalAlignment="Stretch" HorizontalAlignment="Left">
-                <Label Margin="10,0" VerticalAlignment="Stretch" FontSize="16" Cursor="Hand" Name="TitleBarCopy" MouseDown="TitleBarCopy_MouseDown">🔗</Label>
-                <TextBox Name="TitleBarLabel"
-                    BorderThickness="0"
-                    Opacity="0.0"
-                    Text="{Binding Text, Mode=OneWay}"
-                    IsReadOnly="True"
-                    TextWrapping="Wrap"
-                    VerticalAlignment="Center"
-                    Background="Transparent"
-                    Cursor="Arrow"
-                    IsHitTestVisible="False" />
+                <Label Name="TitleBarCopy" MouseDown="TitleBarCopy_MouseDown"
+                    VerticalAlignment="Stretch" Visibility="Collapsed"
+                    FontSize="16" Cursor="Hand"  Margin="10,0">🔗</Label>
+                <TextBlock
+                    Text="{Binding Title, RelativeSource={RelativeSource FindAncestor,AncestorType=Window}}"
+                    Visibility="{Binding Visibility, ElementName=TitleBarCopy}"
+                    VerticalAlignment="Center">
+                </TextBlock>
             </DockPanel>
             <DockPanel VerticalAlignment="Stretch" HorizontalAlignment="Right">
                 <Button Width="30" VerticalAlignment="Stretch" Name="TitleBtnMinimize" FontSize="18" Click="TitleBtnMinimize_Click" Padding="1,1,1,2">‒</Button>
