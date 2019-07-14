@@ -20,7 +20,7 @@ namespace NanoMage.Core
 
         private MainWindow moMainWindow { get; set; }
 
-        private object[] moImageBytes { get; set; }
+        private object[] moImageBmaps { get; set; }
 
         private string[] moImagePaths { get; set; }
 
@@ -43,7 +43,7 @@ namespace NanoMage.Core
                 .OrderBy(p => p)
                 .ToArray();
 
-            moImageBytes = new object[moImagePaths.Length];
+            moImageBmaps = new object[moImagePaths.Length];
             miCurrentSeek = Array.BinarySearch(moImagePaths, psFirst);
 
             await _seekToImageAsync(miCurrentSeek);
@@ -53,8 +53,10 @@ namespace NanoMage.Core
         {
             try
             {
-                await LoadImagesAsync(Directory.GetFiles(Path.GetDirectoryName(
-                    psFilePath), "*.*", SearchOption.TopDirectoryOnly), psFilePath);
+                await LoadImagesAsync(
+                    Directory.GetFiles(Path.GetDirectoryName(psFilePath)),
+                    psFilePath
+                );
             }
             catch (Exception toException)
             {
@@ -65,56 +67,58 @@ namespace NanoMage.Core
 
         public async Task LoadPreviousAsync()
         {
-            if (moImagePaths != null)
-            {
-                await _seekToImageAsync(--miCurrentSeek);
-            }
+            await _seekToImageAsync(--miCurrentSeek);
         }
 
         public async Task LoadNextAsync()
         {
-            if (moImagePaths != null)
-            {
-                await _seekToImageAsync(++miCurrentSeek);
-            }
+            await _seekToImageAsync(++miCurrentSeek);
         }
 
         //----------------------------------------------------------------------
 
         private async Task _seekToImageAsync(int piCurrentSeek)
         {
-            int _localWrapIndex(int piSeek)
+            if (moImagePaths?.Length > 0)
             {
-                var tiCount = moImagePaths.Length;
-                return ((piSeek % tiCount) + tiCount) % tiCount;
-            }
-
-            var tiCurrentIndex = _localWrapIndex(piCurrentSeek);
-
-            if (moImageBytes[tiCurrentIndex] == null)
-            {
-                await _loadImageAsync(piCurrentSeek, tiCurrentIndex);
-            }
-            _renderCurrentSeek(piCurrentSeek, tiCurrentIndex);
-
-            var tiPreviousSeek = piCurrentSeek - 1;
-            var tiPreviousIndex = _localWrapIndex(tiPreviousSeek);
-
-            var tiNextSeek = piCurrentSeek + 1;
-            var tiNextIndex = _localWrapIndex(tiNextSeek);
-
-            if (tiPreviousIndex != tiNextIndex)
-            {
-                if (moImageBytes[tiPreviousIndex] == null)
+                int _localWrapIndex(int piSeek)
                 {
-                    await _loadImageAsync(tiPreviousSeek, tiPreviousIndex);
+                    var tiCount = moImagePaths.Length;
+                    return ((piSeek % tiCount) + tiCount) % tiCount;
                 }
-                if (moImageBytes[tiNextIndex] == null)
+
+                var tiCurrentIndex = _localWrapIndex(piCurrentSeek);
+
+                if (moImageBmaps[tiCurrentIndex] == null)
                 {
-                    await _loadImageAsync(tiNextSeek, tiNextIndex);
+                    await _loadImageAsync(piCurrentSeek, tiCurrentIndex);
+                }
+                else
+                {
+                    _renderCurrentSeek(piCurrentSeek, tiCurrentIndex);
+                }
+
+                var tiPreviousSeek = piCurrentSeek - 1;
+                var tiPreviousIndex = _localWrapIndex(tiPreviousSeek);
+
+                var tiNextSeek = piCurrentSeek + 1;
+                var tiNextIndex = _localWrapIndex(tiNextSeek);
+
+                if (tiPreviousIndex != tiNextIndex)
+                {
+                    if (moImageBmaps[tiPreviousIndex] == null)
+                    {
+                        await _loadImageAsync(tiPreviousSeek, tiPreviousIndex);
+                    }
+                    if (moImageBmaps[tiNextIndex] == null)
+                    {
+                        await _loadImageAsync(tiNextSeek, tiNextIndex);
+                    }
                 }
             }
         }
+
+        //----------------------------------------------------------------------
 
         private async Task _loadImageAsync(int piCurrentSeek, int piCurrentIndex)
         {
@@ -128,8 +132,8 @@ namespace NanoMage.Core
                 {
                     using (var toMS = new MemoryStream((int)toFS.Length))
                     {
-                        // Cause a null cast on line 163 to prevent duplicate reads
-                        moImageBytes[piCurrentIndex] = tsCurrentPath;
+                        // Prevent duplicate reads of this image file
+                        moImageBmaps[piCurrentIndex] = tsCurrentPath;
 
                         await toFS.CopyToAsync(toMS);
                         toMS.Position = 0;
@@ -149,7 +153,7 @@ namespace NanoMage.Core
                 System.Diagnostics.Debug.WriteLine(toException);
                 toBitmapImage = null;
             }
-            moImageBytes[piCurrentIndex] = toBitmapImage;
+            moImageBmaps[piCurrentIndex] = toBitmapImage;
             _renderCurrentSeek(piCurrentSeek, piCurrentIndex);
         }
 
@@ -160,7 +164,7 @@ namespace NanoMage.Core
             // If this render call is still for the current seek
             if (miCurrentSeek == piCurrentSeek)
             {
-                var toBitmapImage = moImageBytes[piCurrentIndex] as BitmapImage;
+                var toBitmapImage = moImageBmaps[piCurrentIndex] as BitmapImage;
 
                 if (toBitmapImage == null)
                 {
