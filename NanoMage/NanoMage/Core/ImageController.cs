@@ -13,6 +13,8 @@ namespace NanoMage.Core
     /// </summary>
     public class ImageController
     {
+        #region properties
+
         // GIF maybe in the future, for now they are stills
         // These are the only extensions that NanoMage cares about
         private static readonly Regex VALID_EXTENSIONS_REGEX = new Regex(
@@ -28,13 +30,25 @@ namespace NanoMage.Core
 
         private int miCurrentSeek { get; set; }
 
+        public string CurrentPath
+        {
+            get
+            {
+                return moImagePaths?[_convertSeekToIndex(miCurrentSeek)];
+            }
+        }
+
+        #endregion
+
+        //----------------------------------------------------------------------
+
+        #region public interface
+
         public ImageController(MainWindow poMainWindow)
         {
             moMainWindow = poMainWindow;
             mbIsInitialImage = true;
         }
-
-        //----------------------------------------------------------------------
 
         public async Task LoadImagesAsync(string[] poFilePaths, string psFirst = "")
         {
@@ -75,19 +89,17 @@ namespace NanoMage.Core
             await _seekToImageAsync(++miCurrentSeek);
         }
 
+        #endregion
+
         //----------------------------------------------------------------------
+
+        #region private interface
 
         private async Task _seekToImageAsync(int piCurrentSeek)
         {
             if (moImagePaths?.Length > 0)
             {
-                int _localWrapIndex(int piSeek)
-                {
-                    var tiCount = moImagePaths.Length;
-                    return ((piSeek % tiCount) + tiCount) % tiCount;
-                }
-
-                var tiCurrentIndex = _localWrapIndex(piCurrentSeek);
+                var tiCurrentIndex = _convertSeekToIndex(piCurrentSeek);
 
                 if (moImageBmaps[tiCurrentIndex] == null)
                 {
@@ -99,10 +111,10 @@ namespace NanoMage.Core
                 }
 
                 var tiPreviousSeek = piCurrentSeek - 1;
-                var tiPreviousIndex = _localWrapIndex(tiPreviousSeek);
+                var tiPreviousIndex = _convertSeekToIndex(tiPreviousSeek);
 
                 var tiNextSeek = piCurrentSeek + 1;
-                var tiNextIndex = _localWrapIndex(tiNextSeek);
+                var tiNextIndex = _convertSeekToIndex(tiNextSeek);
 
                 if (tiPreviousIndex != tiNextIndex)
                 {
@@ -198,5 +210,15 @@ namespace NanoMage.Core
                 moMainWindow.Title = Path.GetFileName(moImagePaths[piCurrentIndex]);
             }
         }
+
+        //----------------------------------------------------------------------
+
+        private int _convertSeekToIndex(int piSeek)
+        {
+            var tiCount = moImagePaths.Length;
+            return ((piSeek % tiCount) + tiCount) % tiCount;
+        }
+
+        #endregion
     }
 }

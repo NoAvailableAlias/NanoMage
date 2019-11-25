@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System.Diagnostics;
+using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 
@@ -72,7 +73,7 @@ namespace NanoMage
                 // This is required to play nice with TitleBar_MouseLeftButtonDown
                 (Mouse.LeftButton == MouseButtonState.Pressed))
             {
-                _mouseLeftButtonDown(e);
+                _mouseWindowStateDragMove(e);
             }
         }
 
@@ -80,7 +81,15 @@ namespace NanoMage
 
         private void TitleBarCopy_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            Clipboard.SetText(Title);
+            if (e.ClickCount == 2)
+            {
+                Process.Start("explorer.exe", "/select, " + moImageController.CurrentPath);
+                e.Handled = true;
+            }
+            else
+            {
+                Clipboard.SetText(Title);
+            }
         }
 
         private void TitleBtnMinimize_Click(object sender, RoutedEventArgs e)
@@ -119,11 +128,11 @@ namespace NanoMage
                 // This is required to play nice with Window_PreviewMouseLeftButtonDown
                 (Mouse.LeftButton == MouseButtonState.Pressed))
             {
-                _mouseLeftButtonDown(e);
+                _mouseWindowStateDragMove(e);
             }
         }
 
-        private void _mouseLeftButtonDown(MouseButtonEventArgs e)
+        private void _mouseWindowStateDragMove(MouseButtonEventArgs e)
         {
             if (e.ClickCount == 2)
             {

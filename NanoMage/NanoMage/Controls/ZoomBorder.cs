@@ -14,8 +14,8 @@ namespace NanoMage.Controls
     /// </remarks>
     public class ZoomBorder : Border
     {
-        private static readonly double MAX_ZOOM_SCALE = 0.4;
-        private static readonly double ZOOM_SCALE = 0.2;
+        private static readonly double MAX_ZOOM_SCALE = 0.45;
+        private static readonly double ZOOM_SCALE = 0.15;
 
         //----------------------------------------------------------------------
 
