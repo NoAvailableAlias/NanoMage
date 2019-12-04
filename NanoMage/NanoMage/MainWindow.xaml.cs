@@ -112,13 +112,15 @@ namespace NanoMage
 
         private void TitleBar_MouseEnter(object sender, MouseEventArgs e)
         {
+            TitleBar.Margin = new Thickness();
             TitleBar.Height = TitleBtnMinimize.Width;
             TitleBarCopy.Visibility = Visibility.Visible;
         }
 
         private void TitleBar_MouseLeave(object sender, MouseEventArgs e)
         {
-            TitleBar.Height = TitleBtnMinimize.Width / 3;
+            TitleBar.Margin = new Thickness { Top = 5 };
+            TitleBar.Height = 5;
             TitleBarCopy.Visibility = Visibility.Collapsed;
         }
 

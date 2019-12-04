@@ -9,7 +9,7 @@
         Title="NanoMage" Height="480" Width="720" WindowStyle="None" AllowsTransparency="True"
         PreviewMouseLeftButtonDown="Window_PreviewMouseLeftButtonDown"
         KeyDown="Window_KeyDown" MouseDown="Window_MouseDown"
-        ResizeMode="CanResizeWithGrip">
+        Background="DarkGray">
     <WindowChrome.WindowChrome>
         <WindowChrome CaptionHeight="35" ResizeBorderThickness="5"></WindowChrome>
     </WindowChrome.WindowChrome>
@@ -26,10 +26,10 @@
                 </Image>
             </controls:ZoomBorder>
         </Grid>
-        <Grid VerticalAlignment="Top" Height="10" Background="DarkGray" Name="TitleBar"
+        <Grid VerticalAlignment="Top" Height="5" Background="DarkGray" Name="TitleBar"
             MouseEnter="TitleBar_MouseEnter" MouseLeave="TitleBar_MouseLeave"
             MouseLeftButtonDown="TitleBar_MouseLeftButtonDown"
-            WindowChrome.IsHitTestVisibleInChrome="True">
+            WindowChrome.IsHitTestVisibleInChrome="True" Margin="0,5,0,0">
             <DockPanel VerticalAlignment="Stretch" HorizontalAlignment="Left">
                 <Label Name="TitleBarCopy" MouseDown="TitleBarCopy_MouseDown"
                     VerticalAlignment="Stretch" Visibility="Collapsed"
