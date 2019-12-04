@@ -41,11 +41,11 @@
                 </TextBlock>
             </DockPanel>
             <DockPanel VerticalAlignment="Stretch" HorizontalAlignment="Right">
-                <Button Width="30" VerticalAlignment="Stretch" Name="TitleBtnMinimize" FontSize="18"
+                <Button Width="30" VerticalAlignment="Stretch" Name="TitleBtnMinimize" FontSize="18" BorderThickness="0"
                     Click="TitleBtnMinimize_Click" Padding="1,1,1,2" Content="‒" Focusable="False"></Button>
-                <Button Width="30" VerticalAlignment="Stretch" Name="TitleBtnMaximize" FontSize="18"
+                <Button Width="30" VerticalAlignment="Stretch" Name="TitleBtnMaximize" FontSize="18" BorderThickness="0"
                     Click="TitleBtnMaximize_Click" Padding="1,1,1,6" Content="□" Focusable="False"></Button>
-                <Button Width="30" VerticalAlignment="Stretch" Name="TitleBtnDestruct" FontSize="18"
+                <Button Width="30" VerticalAlignment="Stretch" Name="TitleBtnDestruct" FontSize="18" BorderThickness="0"
                     Click="TitleBtnDestruct_Click" Padding="1,1,1,3" Content="x" Focusable="False"></Button>
             </DockPanel>
         </Grid>
