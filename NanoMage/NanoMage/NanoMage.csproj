@@ -68,6 +68,7 @@
     <Reference Include="System" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Xaml">
       <RequiredTargetFramework>4.0</RequiredTargetFramework>
     </Reference>
@@ -80,6 +81,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Core\ImageAnimator.cs" />
     <Compile Include="Core\ImageController.cs" />
     <Compile Include="Controls\ZoomBorder.cs" />
     <Page Include="MainWindow.xaml">

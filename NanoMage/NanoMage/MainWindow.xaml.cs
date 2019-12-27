@@ -22,12 +22,10 @@ namespace NanoMage
 
             moImageController = new ImageController(this);
 
-            // "Fix" the windowchrome border gap issue... for now...
+            // "Fix" the fullscreen windowchrome border gap issue for now...
             var toBorderThickness = SystemParameters.WindowResizeBorderThickness;
             MaxWidth = SystemParameters.PrimaryScreenWidth + toBorderThickness.Right + 3;
             MaxHeight = SystemParameters.PrimaryScreenHeight + toBorderThickness.Bottom + 3;
-
-            RenderOptions.SetBitmapScalingMode(ImageControl, BitmapScalingMode.Fant);
         }
 
         //----------------------------------------------------------------------

@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Controls;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 
 namespace NanoMage.Core
@@ -15,27 +17,52 @@ namespace NanoMage.Core
     {
         #region properties
 
-        // GIF maybe in the future, for now they are stills
-        // These are the only extensions that NanoMage cares about
         private static readonly Regex VALID_EXTENSIONS_REGEX = new Regex(
-            @"^.+\.(?i)(gif|png|jpg|jpeg)(?-i)$", RegexOptions.Compiled);
+            @"^.+\.(?i)(gif|png|jpg|jpeg)(?-i)$", RegexOptions.Compiled
+        );
+
+        private Action<ImageSource> moFirstImageLoaded;
 
         private MainWindow moMainWindow { get; set; }
 
-        private object[] moImageBmaps { get; set; }
-
         private string[] moImagePaths { get; set; }
 
-        private bool mbIsInitialImage { get; set; }
+        private object[] moImageDatas { get; set; }
 
         private int miCurrentSeek { get; set; }
 
-        public string CurrentPath
+        public string CurrentPath => moImagePaths?[_convertSeekToIndex(miCurrentSeek)];
+
+        #endregion
+
+        //----------------------------------------------------------------------
+
+        #region construction
+
+        public ImageController(MainWindow poMainWindow)
         {
-            get
+            moMainWindow = poMainWindow;
+
+            // Clamp dimensions if needed while preserving aspect ratio
+            moFirstImageLoaded = (poImageSource) =>
             {
-                return moImagePaths?[_convertSeekToIndex(miCurrentSeek)];
-            }
+                if (poImageSource.Height > moMainWindow.MaxHeight)
+                {
+                    moMainWindow.Height = moMainWindow.MaxHeight;
+                    moMainWindow.Width = (moMainWindow.MaxHeight * poImageSource.Width) / poImageSource.Height;
+                }
+                else if (poImageSource.Width > moMainWindow.MaxWidth)
+                {
+                    moMainWindow.Height = (moMainWindow.MaxWidth * poImageSource.Height) / poImageSource.Width;
+                    moMainWindow.Width = moMainWindow.MaxWidth;
+                }
+                else
+                {
+                    moMainWindow.Height = poImageSource.Height;
+                    moMainWindow.Width = poImageSource.Width;
+                }
+                moFirstImageLoaded = null;
+            };
         }
 
         #endregion
@@ -44,12 +71,6 @@ namespace NanoMage.Core
 
         #region public interface
 
-        public ImageController(MainWindow poMainWindow)
-        {
-            moMainWindow = poMainWindow;
-            mbIsInitialImage = true;
-        }
-
         public async Task LoadImagesAsync(string[] poFilePaths, string psFirst = "")
         {
             moImagePaths = poFilePaths
@@ -57,10 +78,10 @@ namespace NanoMage.Core
                 .OrderBy(p => p)
                 .ToArray();
 
-            moImageBmaps = new object[moImagePaths.Length];
+            moImageDatas = new object[moImagePaths.Length];
             miCurrentSeek = Array.BinarySearch(moImagePaths, psFirst);
 
-            await _seekToImageAsync(miCurrentSeek);
+            await _seekToImageAsync(miCurrentSeek, miCurrentSeek);
         }
 
         public async Task LoadImageAsync(string psFilePath)
@@ -74,19 +95,18 @@ namespace NanoMage.Core
             }
             catch (Exception toException)
             {
-                // Maybe an issue with the provided file path?
                 System.Diagnostics.Debug.WriteLine(toException);
             }
         }
 
         public async Task LoadPreviousAsync()
         {
-            await _seekToImageAsync(--miCurrentSeek);
+            await _seekToImageAsync(miCurrentSeek, --miCurrentSeek);
         }
 
         public async Task LoadNextAsync()
         {
-            await _seekToImageAsync(++miCurrentSeek);
+            await _seekToImageAsync(miCurrentSeek, ++miCurrentSeek);
         }
 
         #endregion
@@ -95,19 +115,19 @@ namespace NanoMage.Core
 
         #region private interface
 
-        private async Task _seekToImageAsync(int piCurrentSeek)
+        private async Task _seekToImageAsync(int piLastSeek, int piCurrentSeek)
         {
             if (moImagePaths?.Length > 0)
             {
                 var tiCurrentIndex = _convertSeekToIndex(piCurrentSeek);
 
-                if (moImageBmaps[tiCurrentIndex] == null)
+                if (moImageDatas[tiCurrentIndex] == null)
                 {
-                    await _loadImageAsync(piCurrentSeek, tiCurrentIndex);
+                    await _loadImageAsync(piLastSeek, piCurrentSeek, tiCurrentIndex);
                 }
                 else
                 {
-                    _renderCurrentSeek(piCurrentSeek, tiCurrentIndex);
+                    _renderCurrentSeek(piLastSeek, piCurrentSeek, tiCurrentIndex);
                 }
 
                 var tiPreviousSeek = piCurrentSeek - 1;
@@ -118,13 +138,13 @@ namespace NanoMage.Core
 
                 if (tiPreviousIndex != tiNextIndex)
                 {
-                    if (moImageBmaps[tiPreviousIndex] == null)
+                    if (moImageDatas[tiPreviousIndex] == null)
                     {
-                        await _loadImageAsync(tiPreviousSeek, tiPreviousIndex);
+                        await _loadImageAsync(piLastSeek, tiPreviousSeek, tiPreviousIndex);
                     }
-                    if (moImageBmaps[tiNextIndex] == null)
+                    if (moImageDatas[tiNextIndex] == null)
                     {
-                        await _loadImageAsync(tiNextSeek, tiNextIndex);
+                        await _loadImageAsync(piLastSeek, tiNextSeek, tiNextIndex);
                     }
                 }
             }
@@ -132,10 +152,9 @@ namespace NanoMage.Core
 
         //----------------------------------------------------------------------
 
-        private async Task _loadImageAsync(int piCurrentSeek, int piCurrentIndex)
+        private async Task _loadImageAsync(int piLastSeek, int piCurrentSeek, int piCurrentIndex)
         {
             var tsCurrentPath = moImagePaths[piCurrentIndex];
-            var toBitmapImage = new BitmapImage();
 
             try
             {
@@ -145,67 +164,75 @@ namespace NanoMage.Core
                     using (var toMS = new MemoryStream((int)toFS.Length))
                     {
                         // Prevent duplicate reads of this image file
-                        moImageBmaps[piCurrentIndex] = tsCurrentPath;
+                        moImageDatas[piCurrentIndex] = tsCurrentPath;
 
                         await toFS.CopyToAsync(toMS);
-                        toMS.Position = 0;
-
-                        toBitmapImage.BeginInit();
-                        toBitmapImage.CreateOptions = BitmapCreateOptions.PreservePixelFormat;
-                        toBitmapImage.CacheOption = BitmapCacheOption.OnLoad;
-                        toBitmapImage.StreamSource = toMS;
-                        toBitmapImage.EndInit();
-                        toBitmapImage.Freeze();
+                        moImageDatas[piCurrentIndex] = toMS.ToArray();
                     }
                 }
             }
             catch (Exception toException)
             {
-                // Possibly a filesystem error or a bad image file?
                 System.Diagnostics.Debug.WriteLine(toException);
-                toBitmapImage = null;
             }
-            moImageBmaps[piCurrentIndex] = toBitmapImage;
-            _renderCurrentSeek(piCurrentSeek, piCurrentIndex);
+            _renderCurrentSeek(piLastSeek, piCurrentSeek, piCurrentIndex);
         }
 
         //----------------------------------------------------------------------
 
-        private void _renderCurrentSeek(int piCurrentSeek, int piCurrentIndex)
+        private void _renderCurrentSeek(int piLastSeek, int piCurrentSeek, int piCurrentIndex)
         {
             // If this render call is still for the current seek
             if (miCurrentSeek == piCurrentSeek)
             {
-                var toBitmapImage = moImageBmaps[piCurrentIndex] as BitmapImage;
+                // Stop any previous seek animations that might be running
+                if (moImageDatas[_convertSeekToIndex(piLastSeek)] is Storyboard toAnimation)
+                {
+                    toAnimation.Stop();
+                }
 
-                if (toBitmapImage == null)
+                var toImageData = moImageDatas[piCurrentIndex];
+                if (toImageData is string)
                 {
                     // Something went wrong or the current seek is still loading
                     moMainWindow.ImageControl.ClearValue(Image.SourceProperty);
                 }
-                else
+                else if (toImageData is Storyboard toStoryboard)
                 {
-                    if (mbIsInitialImage)
+                    toStoryboard.Begin();
+                }
+                else if (toImageData is BitmapImage toBitmapImage)
+                {
+                    moMainWindow.ImageControl.SetValue(Image.SourceProperty, toBitmapImage);
+                }
+                else if (toImageData is byte[] toImageBytes)
+                {
+                    toStoryboard = ImageAnimator.GetStoryboard(
+                        moMainWindow.ImageControl, toImageBytes, moFirstImageLoaded
+                    );
+
+                    if (toStoryboard is null)
                     {
-                        // Clamp dimensions if needed while preserving aspect ratio
-                        if (toBitmapImage.PixelHeight > moMainWindow.MaxHeight)
+                        using (var toMS = new MemoryStream(toImageBytes))
                         {
-                            moMainWindow.Height = moMainWindow.MaxHeight;
-                            moMainWindow.Width = (moMainWindow.MaxHeight * toBitmapImage.PixelWidth) / toBitmapImage.PixelHeight;
+                            toBitmapImage = new BitmapImage();
+                            toBitmapImage.BeginInit();
+                            toBitmapImage.CreateOptions = BitmapCreateOptions.None;
+                            toBitmapImage.CacheOption = BitmapCacheOption.OnLoad;
+                            toBitmapImage.StreamSource = toMS;
+                            toBitmapImage.EndInit();
+                            toBitmapImage.Freeze();
+
+                            moImageDatas[piCurrentIndex] = toBitmapImage;
                         }
-                        else if (toBitmapImage.PixelWidth > moMainWindow.MaxWidth)
-                        {
-                            moMainWindow.Height = (moMainWindow.MaxWidth * toBitmapImage.PixelHeight) / toBitmapImage.PixelWidth;
-                            moMainWindow.Width = moMainWindow.MaxWidth;
-                        }
-                        else
-                        {
-                            moMainWindow.Height = toBitmapImage.PixelHeight;
-                            moMainWindow.Width = toBitmapImage.PixelWidth;
-                        }
-                        mbIsInitialImage = false;
+                        moFirstImageLoaded?.Invoke(toBitmapImage);
+                        moMainWindow.ImageControl.SetValue(Image.SourceProperty, toBitmapImage);
                     }
-                    moMainWindow.ImageControl.SetCurrentValue(Image.SourceProperty, toBitmapImage);
+                    else
+                    {
+                        moImageDatas[piCurrentIndex] = toStoryboard;
+                        toStoryboard.Begin();
+                    }
                 }
                 moMainWindow.Title = Path.GetFileName(moImagePaths[piCurrentIndex]);
             }
