@@ -49,7 +49,7 @@ namespace NanoMage.Core
         public static Storyboard GetStoryboard(
             Image poImage,
             byte[] poImageBytes,
-            Action<ImageSource> poFirstImageLoaded)
+            Action<BitmapSource> poFirstImageLoaded)
         {
             using (var toMS = new MemoryStream(poImageBytes))
             {
@@ -84,7 +84,7 @@ namespace NanoMage.Core
         private static ObjectAnimationUsingKeyFrames _createAnimation(
             BitmapDecoder poDecoder,
             Metadata poMetadata,
-            Action<ImageSource> poFirstImageLoaded)
+            Action<BitmapSource> poFirstImageLoaded)
         {
             var toAnimation = new ObjectAnimationUsingKeyFrames();
             var toAnimationTime = TimeSpan.FromMilliseconds(0);
@@ -107,13 +107,12 @@ namespace NanoMage.Core
                     switch (toFrameMetadata.meDisposalMethod)
                     {
                         case eDisposalMethod.None:
+                            break;
                         case eDisposalMethod.NoDispose:
                             toBaseFrame = toRenderedFrame;
                             break;
                         case eDisposalMethod.RestoreBackground:
-                            toBaseFrame = _isNotFullSize(toFrameMetadata, toFullSize)
-                                ? _restoreBackgroundFrame(toFullSize, toFrame, toFrameMetadata)
-                                : null;
+                            toBaseFrame = _restoreBackgroundFrame(toFullSize, toFrame, toFrameMetadata);
                             break;
                         case eDisposalMethod.RestorePrevious:
                             break;
@@ -139,7 +138,7 @@ namespace NanoMage.Core
         {
             if (poDecoder.Metadata is BitmapMetadata toMetadata)
             {
-                var toBitmapMetadata = (BitmapMetadata)toMetadata.GetQuery("/logscrdesc");
+                var toBitmapMetadata = toMetadata.GetQuery("/logscrdesc") as BitmapMetadata;
                 if (toBitmapMetadata != null)
                 {
                     return new Metadata
@@ -154,10 +153,10 @@ namespace NanoMage.Core
 
         private static FrameMetadata _getFrameMetadata(BitmapFrame poFrame)
         {
-            if (poFrame.Metadata is BitmapMetadata toBitmapMetadata)
+            if (poFrame.Metadata is BitmapMetadata toMetadata)
             {
-                var toGrctlext = toBitmapMetadata.GetQuery("/grctlext") as BitmapMetadata;
-                var toImgdesc = toBitmapMetadata.GetQuery("/imgdesc") as BitmapMetadata;
+                var toGrctlext = toMetadata.GetQuery("/grctlext") as BitmapMetadata;
+                var toImgdesc = toMetadata.GetQuery("/imgdesc") as BitmapMetadata;
 
                 if (toGrctlext != null && toImgdesc != null)
                 {
@@ -176,7 +175,7 @@ namespace NanoMage.Core
 
                     // Handle malformed gif delays by setting a minimum delay
                     toFrameMetadata.moDelay = toFrameMetadata.moDelay.Ticks == 0
-                        ? TimeSpan.FromMilliseconds(42) : toFrameMetadata.moDelay;
+                        ? TimeSpan.FromMilliseconds(50) : toFrameMetadata.moDelay;
 
                     return toFrameMetadata;
                 }

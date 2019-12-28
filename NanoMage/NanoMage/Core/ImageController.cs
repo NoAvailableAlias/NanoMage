@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Controls;
-using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 
@@ -21,7 +20,7 @@ namespace NanoMage.Core
             @"^.+\.(?i)(gif|png|jpg|jpeg)(?-i)$", RegexOptions.Compiled
         );
 
-        private Action<ImageSource> moFirstImageLoaded;
+        private Action<BitmapSource> moFirstImageLoaded;
 
         private MainWindow moMainWindow { get; set; }
 
@@ -44,22 +43,24 @@ namespace NanoMage.Core
             moMainWindow = poMainWindow;
 
             // Clamp dimensions if needed while preserving aspect ratio
-            moFirstImageLoaded = (poImageSource) =>
+            moFirstImageLoaded = (poBitmapSource) =>
             {
-                if (poImageSource.Height > moMainWindow.MaxHeight)
+                if (poBitmapSource.PixelHeight > moMainWindow.MaxHeight)
                 {
                     moMainWindow.Height = moMainWindow.MaxHeight;
-                    moMainWindow.Width = (moMainWindow.MaxHeight * poImageSource.Width) / poImageSource.Height;
+                    moMainWindow.Width = (moMainWindow.MaxHeight *
+                        poBitmapSource.PixelWidth) / poBitmapSource.PixelHeight;
                 }
-                else if (poImageSource.Width > moMainWindow.MaxWidth)
+                else if (poBitmapSource.PixelWidth > moMainWindow.MaxWidth)
                 {
-                    moMainWindow.Height = (moMainWindow.MaxWidth * poImageSource.Height) / poImageSource.Width;
+                    moMainWindow.Height = (moMainWindow.MaxWidth *
+                        poBitmapSource.PixelHeight) / poBitmapSource.PixelWidth;
                     moMainWindow.Width = moMainWindow.MaxWidth;
                 }
                 else
                 {
-                    moMainWindow.Height = poImageSource.Height;
-                    moMainWindow.Width = poImageSource.Width;
+                    moMainWindow.Height = poBitmapSource.PixelHeight;
+                    moMainWindow.Width = poBitmapSource.PixelWidth;
                 }
                 moFirstImageLoaded = null;
             };
@@ -165,8 +166,9 @@ namespace NanoMage.Core
                     {
                         // Prevent duplicate reads of this image file
                         moImageDatas[piCurrentIndex] = tsCurrentPath;
-
+                        // Allow the calling thread to continue
                         await toFS.CopyToAsync(toMS);
+                        // Once loaded store the byte array
                         moImageDatas[piCurrentIndex] = toMS.ToArray();
                     }
                 }

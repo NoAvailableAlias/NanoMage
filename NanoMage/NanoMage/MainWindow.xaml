@@ -16,7 +16,8 @@
     <Grid>
         <Grid Background="Black" AllowDrop="True" Name="ImageGrid" Drop="ImageGrid_Drop" Margin="0,10,0,0">
             <controls:ZoomBorder x:Name="ImageBorder" ClipToBounds="True">
-                <Image Name="ImageControl" UseLayoutRounding="true" SnapsToDevicePixels="true">
+                <Image Name="ImageControl" UseLayoutRounding="true" SnapsToDevicePixels="true"
+                    RenderOptions.BitmapScalingMode="Fant">
                     <Image.RenderTransform>
                         <TransformGroup>
                             <ScaleTransform />
